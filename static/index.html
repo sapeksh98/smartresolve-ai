@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartResolve AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #07070d;
+    --surface: rgba(18, 18, 29, 0.6);
+    --surface-hover: rgba(28, 28, 43, 0.7);
+    --surface-active: rgba(36, 36, 56, 0.8);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(124, 106, 247, 0.3);
+    --accent: #7c6af7;
+    --accent-glow: rgba(124, 106, 247, 0.3);
+    --accent-light: #9d8ffd;
+    --accent2: #f76a8a;
+    --accent3: #6af7c8;
+    --text: #f3f3f7;
+    --muted: #8e8eab;
+    --high: #ff5c5c;
+    --med: #ffb84d;
+    --low: #3dd885;
+    
+    --glow-high: rgba(255, 92, 92, 0.15);
+    --glow-med: rgba(255, 184, 77, 0.15);
+    --glow-low: rgba(61, 216, 133, 0.15);
+  }
+  
+  * { margin:0; padding:0; box-sizing:border-box; }
+  
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg);
+    background-image: 
+      radial-gradient(circle at 15% 15%, rgba(124, 106, 247, 0.09) 0%, transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(247, 106, 138, 0.07) 0%, transparent 45%);
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.5;
+  }
+
+  /* Grid mesh overlay */
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.007) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.007) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; position:relative; z-index:1; }
+
+  /* Header */
+  header {
+    padding: 28px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+    background: rgba(7, 7, 13, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .header-inner { display:flex; align-items:center; justify-content:space-between; }
+  .logo {
+    display:flex; align-items:center; gap:12px;
+  }
+  .logo-icon {
+    width:38px; height:38px;
+    background: linear-gradient(135deg, var(--accent), #5a4fd4);
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+    box-shadow: 0 0 20px rgba(124,106,247,0.3);
+  }
+  .logo-text {
+    font-family:'Outfit', sans-serif;
+    font-weight:800;
+    font-size:23px;
+    letter-spacing:-0.5px;
+  }
+  .logo-text span { color: var(--accent); }
+  
+  .status-badge {
+    display:flex; align-items:center; gap:8px;
+    background: rgba(61, 216, 133, 0.08);
+    border: 1px solid rgba(61, 216, 133, 0.2);
+    padding: 6px 14px;
+    border-radius:30px;
+    font-size:12px;
+    font-weight:600;
+    color: var(--low);
+  }
+  .status-dot {
+    width:7px; height:7px;
+    border-radius:50%;
+    background: var(--low);
+    box-shadow: 0 0 10px var(--low);
+    animation: pulse 2.2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:0.4; transform:scale(0.85);} }
+
+  /* Input section */
+  .input-section {
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius:20px;
+    padding: 32px;
+    margin-bottom: 28px;
+    box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+  }
+  .section-label {
+    font-family:'Outfit', sans-serif;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color: var(--accent-light);
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-label::after {
+    content:'';
+    flex:1;
+    height:1px;
+    background: linear-gradient(90deg, rgba(124, 106, 247, 0.2), transparent);
+  }
+  
+  textarea {
+    width:100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    border-radius:12px;
+    padding:18px;
+    color: var(--text);
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:14px;
+    line-height:1.6;
+    resize:vertical;
+    min-height:130px;
+    outline:none;
+    transition: all 0.25s ease;
+  }
+  textarea:focus { 
+    border-color: var(--accent); 
+    box-shadow: 0 0 15px rgba(124, 106, 247, 0.15);
+    background: rgba(0, 0, 0, 0.35);
+  }
+  textarea::placeholder { color: var(--muted); opacity: 0.7; }
+
+  .btn-row { display:flex; gap:12px; margin-top:20px; }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #5a4fd4);
+    color: white;
+    border:none;
+    padding: 13px 30px;
+    border-radius:10px;
+    font-family:'Outfit', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    letter-spacing:0.5px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 20px rgba(124,106,247,0.25);
+  }
+  .btn-primary:hover { 
+    transform:translateY(-1.5px); 
+    box-shadow: 0 6px 25px rgba(124,106,247,0.45);
+    filter: brightness(1.08);
+  }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+  
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 13px 22px;
+    border-radius:10px;
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-weight: 500;
+    font-size:13px;
+    cursor:pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--text); background: rgba(255, 255, 255, 0.03); }
+
+  /* Sample complaints */
+  .samples {
+    display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;
+    align-items:center;
+  }
+  .sample-chip {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius:30px;
+    padding: 6px 14px;
+    font-size:12px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor:pointer;
+    transition: all 0.2s ease;
+  }
+  .sample-chip:hover { 
+    border-color: var(--accent); 
+    color: var(--text);
+    background: rgba(124, 106, 247, 0.08);
+    transform: translateY(-1px);
+  }
+
+  /* Loading Container */
+  .loading {
+    display:none;
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius:20px;
+    padding: 40px;
+    text-align:center;
+    margin-bottom:32px;
+    box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+  }
+  .loading.active { display:block; }
+  
+  .loading-spinner-container {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 20px;
+  }
+  .spinner {
+    width:48px; height:48px;
+    border:3px solid rgba(255, 255, 255, 0.04);
+    border-top-color: var(--accent);
+    border-radius:50%;
+    animation: spin 0.85s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  
+  .loading-title {
+    font-family:'Outfit',sans-serif;
+    font-weight:700;
+    font-size:17px;
+    margin-bottom: 24px;
+    letter-spacing: 0.2px;
+  }
+
+  .loading-steps { 
+    display:flex; 
+    flex-direction:column; 
+    gap:10px; 
+    max-width:440px; 
+    margin:0 auto; 
+  }
+  .loading-step {
+    display:flex; 
+    align-items:center; 
+    gap:12px;
+    padding: 12px 18px;
+    border-radius:10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    font-size:13.5px;
+    color: var(--muted);
+    transition: all 0.3s ease;
+    text-align: left;
+  }
+  .loading-step.active { 
+    color: var(--text); 
+    background: rgba(124, 106, 247, 0.08); 
+    border-color: rgba(124, 106, 247, 0.25);
+    box-shadow: 0 0 15px rgba(124, 106, 247, 0.08);
+  }
+  .loading-step.done { 
+    color: var(--low); 
+    background: rgba(61, 216, 133, 0.03);
+    border-color: rgba(61, 216, 133, 0.15);
+  }
+  
+  .step-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+  }
+
+  /* Results */
+  .results { display:none; }
+  .results.active { display:block; animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+
+  /* Metrics row */
+  .metrics-row {
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:20px;
+    margin-bottom:24px;
+  }
+  .metric-card {
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius:16px;
+    padding:20px 24px;
+    position:relative;
+    overflow:hidden;
+    box-shadow: 0 10px 25px -10px rgba(0,0,0,0.3);
+    transition: all 0.25s ease;
+  }
+  .metric-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .metric-card::before {
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0;
+    height:3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .metric-label { 
+    font-size:10px; 
+    font-weight: 700;
+    color:var(--muted); 
+    letter-spacing:1.5px; 
+    text-transform:uppercase; 
+    margin-bottom:8px; 
+  }
+  .metric-value { 
+    font-family:'Outfit',sans-serif; 
+    font-weight:800; 
+    font-size:24px; 
+  }
+  .metric-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+
+  /* Content grid */
+  .content-grid {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:20px;
+    margin-bottom:20px;
+  }
+  .card {
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius:16px;
+    padding:24px;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+    transition: all 0.25s ease;
+  }
+  .card:hover {
+    border-color: rgba(255,255,255,0.12);
+  }
+  .card-title {
+    font-family:'Outfit',sans-serif;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color: var(--muted);
+    margin-bottom:16px;
+    display:flex; 
+    align-items:center; 
+    gap:8px;
+  }
+  .card-body {
+    font-size:13.5px;
+    line-height:1.75;
+    color: #e2e2eb;
+    white-space:pre-wrap;
+  }
+  
+  /* Modern soft glowing border tints */
+  .card.policy { border-left: 4px solid var(--accent); }
+  .card.resolution { border-left: 4px solid var(--accent3); }
+  
+  .card.risk-high { border-left: 4px solid var(--high); background: linear-gradient(180deg, var(--glow-high), transparent); }
+  .card.risk-med { border-left: 4px solid var(--med); background: linear-gradient(180deg, var(--glow-med), transparent); }
+  .card.risk-low { border-left: 4px solid var(--low); background: linear-gradient(180deg, var(--glow-low), transparent); }
+
+  /* Reply card */
+  .reply-card {
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius:16px;
+    padding:24px;
+    margin-bottom:20px;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+  }
+  .reply-text {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border);
+    border-radius:10px;
+    padding:20px;
+    font-size:14px;
+    line-height:1.8;
+    white-space:pre-wrap;
+    margin-top:14px;
+    max-height:240px;
+    overflow-y:auto;
+    outline: none;
+    transition: all 0.25s ease;
+  }
+  .reply-text[contenteditable="true"] {
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(124, 106, 247, 0.1);
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  /* Approval section */
+  .approval-section {
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius:16px;
+    padding:24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+  }
+  .approval-label { font-family:'Outfit',sans-serif; font-weight:700; font-size:15px; }
+  .approval-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+  .approval-btns { display:flex; gap:10px; }
+  
+  .btn-approve {
+    background: rgba(61, 216, 133, 0.1);
+    border: 1px solid rgba(61, 216, 133, 0.3);
+    color: var(--low);
+    padding:11px 22px;
+    border-radius:8px;
+    font-family:'Outfit',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .btn-approve:hover { background: rgba(61, 216, 133, 0.22); border-color: var(--low); transform: translateY(-1px); }
+  .btn-approve:active { transform: translateY(0); }
+  
+  .btn-edit {
+    background: rgba(124, 106, 247, 0.1);
+    border: 1px solid rgba(124, 106, 247, 0.3);
+    color: var(--accent-light);
+    padding:11px 22px;
+    border-radius:8px;
+    font-family:'Outfit',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .btn-edit:hover { background: rgba(124, 106, 247, 0.2); border-color: var(--accent); transform: translateY(-1px); }
+  .btn-edit:active { transform: translateY(0); }
+  
+  .btn-reject {
+    background: rgba(255, 92, 92, 0.1);
+    border: 1px solid rgba(255, 92, 92, 0.3);
+    color: var(--high);
+    padding:11px 22px;
+    border-radius:8px;
+    font-family:'Outfit',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .btn-reject:hover { background: rgba(255, 92, 92, 0.2); border-color: var(--high); transform: translateY(-1px); }
+  .btn-reject:active { transform: translateY(0); }
+
+  /* Toast */
+  .toast {
+    position:fixed;
+    bottom:28px; right:28px;
+    padding:14px 22px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-weight:600;
+    z-index:100;
+    transform:translateY(80px);
+    opacity:0;
+    transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.success { background: rgba(18, 29, 23, 0.9); border:1px solid rgba(61, 216, 133, 0.3); color:var(--low); backdrop-filter: blur(8px); }
+  .toast.error { background: rgba(29, 18, 18, 0.9); border:1px solid rgba(255, 92, 92, 0.3); color:var(--high); backdrop-filter: blur(8px); }
+  .toast.info { background: rgba(18, 18, 29, 0.9); border:1px solid rgba(124, 106, 247, 0.3); color:var(--accent-light); backdrop-filter: blur(8px); }
+
+  /* Risk/Priority status text colors */
+  .risk-HIGH { color: var(--high); }
+  .risk-MEDIUM { color: var(--med); }
+  .risk-LOW { color: var(--low); }
+  .priority-HIGH { color: var(--high); }
+  .priority-MEDIUM { color: var(--med); }
+  .priority-LOW { color: var(--low); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
+
+  @media(max-width:768px) {
+    .metrics-row { grid-template-columns:1fr; gap:16px; }
+    .content-grid { grid-template-columns:1fr; gap:16px; }
+    .approval-section { flex-direction:column; align-items:flex-start; }
+    .header-inner { flex-direction:column; gap:16px; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">Smart<span>Resolve</span> AI</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="status-badge">
+          <div class="status-dot"></div>
+          All Agents Online
+        </div>
+        <a href="/admin"
+          style="display:flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:30px;font-size:12px;font-weight:600;color:var(--muted);text-decoration:none;transition:all 0.25s;"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.color='#fff';this.style.background='rgba(124, 106, 247, 0.05)'"
+          onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='var(--muted)';this.style.background='rgba(255,255,255,0.03)'">
+          🔐 Admin Panel
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Input -->
+  <div class="input-section">
+    <div class="section-label">Customer Complaint Input</div>
+    <textarea id="complaint" placeholder="Paste or type the customer complaint here..."></textarea>
+    <div class="samples">
+      <span style="font-size:12px;color:var(--muted);margin-right:6px;font-weight:600;">Try:</span>
+      <div class="sample-chip" onclick="setSample(0)">📦 Delivery delay</div>
+      <div class="sample-chip" onclick="setSample(1)">💳 Double billing</div>
+      <div class="sample-chip" onclick="setSample(2)">🔧 Technical issue</div>
+      <div class="sample-chip" onclick="setSample(3)">↩️ Refund request</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="resolveBtn" onclick="resolveComplaint()">
+        <span style="font-size: 16px;">⚡</span> Run AI Agents
+      </button>
+      <button class="btn-secondary" onclick="clearAll()">Clear</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loading-spinner-container">
+      <div class="spinner"></div>
+    </div>
+    <div class="loading-title">Processing through Agent Pipeline...</div>
+    <div class="loading-steps">
+      <div class="loading-step" id="step1">🏷️ Agent 1 — Classifying ticket</div>
+      <div class="loading-step" id="step2">📜 Agent 2 — Retrieving policies</div>
+      <div class="loading-step" id="step3">✅ Agent 3 — Generating resolution</div>
+      <div class="loading-step" id="step4">⚠️ Agent 4 — Assessing risk</div>
+      <div class="loading-step" id="step5">📧 Agent 5 — Writing reply</div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-label">Category</div>
+        <div class="metric-value" id="res-category">—</div>
+        <div class="metric-sub">Complaint type</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Priority</div>
+        <div class="metric-value" id="res-priority">—</div>
+        <div class="metric-sub">Urgency level</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Risk Level</div>
+        <div class="metric-value" id="res-risk">—</div>
+        <div class="metric-sub">Resolution risk</div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div class="card policy">
+        <div class="card-title">📜 Relevant Policy</div>
+        <div class="card-body" id="res-policy"></div>
+      </div>
+      <div class="card resolution">
+        <div class="card-title">✅ Resolution Plan</div>
+        <div class="card-body" id="res-resolution"></div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div class="card" id="res-risk-card">
+        <div class="card-title">⚠️ Risk Assessment</div>
+        <div class="card-body" id="res-risk-body"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Ticket Summary</div>
+        <div class="card-body" id="res-summary"></div>
+      </div>
+    </div>
+
+    <div class="reply-card">
+      <div class="card-title">
+        📧 Customer Reply Draft
+      </div>
+      <div class="reply-text" id="res-reply"></div>
+    </div>
+
+    <div class="approval-section">
+      <div>
+        <div class="approval-label">👤 Human Approval Required</div>
+        <div class="approval-sub">Review the AI-generated reply before sending to customer</div>
+      </div>
+      <div class="approval-btns">
+        <button class="btn-approve" onclick="approve()">✅ Approve & Send</button>
+        <button class="btn-edit" onclick="editReply()">✏️ Edit Reply</button>
+        <button class="btn-reject" onclick="reject()">❌ Escalate</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const samples = [
+  "I ordered a laptop 2 weeks ago and still haven't received it. I've been waiting and no one is updating me. This is completely unacceptable!",
+  "I was charged twice for my subscription this month and nobody is responding to my emails. I want an immediate refund for the duplicate charge!",
+  "Your app has been crashing every time I try to open it for the past 3 days. I paid for the premium plan and this is not acceptable.",
+  "I returned my item 10 days ago and still haven't received my refund. The tracking shows it was delivered to your warehouse. Please process my refund immediately."
+];
+
+const stepTexts = [
+  "Agent 1 — Classifying ticket",
+  "Agent 2 — Retrieving policies",
+  "Agent 3 — Generating resolution",
+  "Agent 4 — Assessing risk",
+  "Agent 5 — Writing reply"
+];
+
+const stepEmojis = ["🏷️", "📜", "✅", "⚠️", "📧"];
+
+function setSample(i) {
+  document.getElementById('complaint').value = samples[i];
+}
+
+function clearAll() {
+  document.getElementById('complaint').value = '';
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('loading').classList.remove('active');
+}
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.className = `toast ${type}`, 3500);
+}
+
+async function animateSteps() {
+  for(let i=1; i<=5; i++) {
+    const el = document.getElementById(`step${i}`);
+    el.classList.add('active');
+    el.innerHTML = `<span class="step-spinner"></span> ${stepEmojis[i-1]} ${stepTexts[i-1]}`;
+    await new Promise(r => setTimeout(r, 700));
+    el.classList.remove('active');
+    el.classList.add('done');
+    el.innerHTML = `✓ ${stepTexts[i-1]}`;
+  }
+}
+
+async function resolveComplaint() {
+  const complaint = document.getElementById('complaint').value.trim();
+  if(!complaint) { showToast('Please enter a complaint first!', 'error'); return; }
+
+  // Reset steps cleanly
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById(`step${i}`);
+    el.classList.remove('active','done');
+    el.innerHTML = `${stepEmojis[i-1]} ${stepTexts[i-1]}`;
+  }
+
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('resolveBtn').disabled = true;
+
+  animateSteps();
+
+  try {
+    const res = await fetch('/resolve', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({complaint})
+    });
+    const data = await res.json();
+
+    document.getElementById('loading').classList.remove('active');
+
+    // Fill results
+    const cat = document.getElementById('res-category');
+    cat.textContent = data.category;
+
+    const pri = document.getElementById('res-priority');
+    pri.textContent = data.priority;
+    pri.className = `metric-value priority-${data.priority}`;
+
+    const risk = document.getElementById('res-risk');
+    risk.textContent = data.risk_level;
+    risk.className = `metric-value risk-${data.risk_level}`;
+
+    const riskCard = document.getElementById('res-risk-card');
+    riskCard.className = `card risk-${data.risk_level.toLowerCase()}`;
+
+    document.getElementById('res-policy').textContent = data.relevant_policy;
+    document.getElementById('res-resolution').textContent = data.resolution;
+    document.getElementById('res-summary').textContent = data.summary;
+    document.getElementById('res-risk-body').textContent =
+      `Risk: ${data.risk_reason}\n\nRecommendation: ${data.recommendation}`;
+    document.getElementById('res-reply').textContent = data.customer_reply;
+
+    document.getElementById('results').classList.add('active');
+    showToast('✅ All 5 agents completed successfully!', 'success');
+
+  } catch(err) {
+    document.getElementById('loading').classList.remove('active');
+    showToast('❌ Error connecting to API. Is the backend running?', 'error');
+  }
+
+  document.getElementById('resolveBtn').disabled = false;
+}
+
+function approve() {
+  showToast('✅ Reply approved and sent to customer!', 'success');
+}
+function editReply() {
+  showToast('✏️ Edit mode — modify the reply above', 'info');
+  document.getElementById('res-reply').contentEditable = 'true';
+  document.getElementById('res-reply').focus();
+}
+function reject() {
+  showToast('🚨 Escalated to senior support team!', 'error');
+}
+</script>
+</body>
+</html>

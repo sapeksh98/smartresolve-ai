@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartResolve AI — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #f8f9fc; 
+  --surface: #ffffff; 
+  --surface2: #f1f3f7;
+  --border: rgba(0, 0, 0, 0.06); 
+  --text: #1b1e28; 
+  --muted: #8791a8;
+  --accent: #5b4cf5; 
+  --accent-light: #eeecfe;
+  --success: #10b981; 
+  --success-light: #ecfdf5;
+  --warning: #f59e0b; 
+  --warning-light: #fffbeb;
+  --danger: #ef4444; 
+  --danger-light: #fef2f2;
+  --info: #3b82f6; 
+  --info-light: #eff6ff;
+  --radius: 16px; 
+  --radius-sm: 10px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body { 
+  font-family: 'Plus Jakarta Sans', sans-serif; 
+  background-color: var(--bg); 
+  color: var(--text); 
+  font-size: 13px; 
+  line-height: 1.5;
+}
+
+.layout { display:grid; grid-template-columns:250px 1fr; min-height:100vh; }
+
+/* Sidebar */
+.sidebar { 
+  background: var(--surface); 
+  border-right: 1px solid var(--border); 
+  padding: 24px 20px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 24px; 
+  position: sticky; 
+  top: 0; 
+  height: 100vh; 
+  box-shadow: 2px 0 20px rgba(0,0,0,0.01);
+}
+
+.logo { display:flex; align-items:center; gap:10px; }
+
+.logo-mark { 
+  width:34px; height:34px; 
+  background: var(--accent); 
+  border-radius:10px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: white; 
+  font-size: 16px; 
+  box-shadow: 0 4px 12px rgba(91, 76, 245, 0.25);
+}
+
+.logo-name { 
+  font-family:'Outfit', sans-serif; 
+  font-weight: 800; 
+  font-size: 17px; 
+  letter-spacing: -0.3px;
+}
+.logo-name span { color: var(--accent); }
+
+.admin-badge { 
+  background: var(--danger-light); 
+  color: var(--danger); 
+  border: 1px solid rgba(239, 68, 68, 0.15); 
+  border-radius: 30px; 
+  padding: 4px 12px; 
+  font-size: 11px; 
+  font-weight: 600; 
+  width: fit-content; 
+}
+
+.nav { display:flex; flex-direction:column; gap:6px; }
+
+.nav-item { 
+  display:flex; 
+  align-items:center; 
+  gap:10px; 
+  padding:11px 14px; 
+  border-radius:var(--radius-sm); 
+  cursor:pointer; 
+  transition:all 0.2s ease; 
+  color:var(--muted); 
+  border:1px solid transparent; 
+  font-size:13px; 
+  font-weight:550;
+}
+.nav-item:hover { 
+  background: var(--bg); 
+  color: var(--text); 
+}
+.nav-item.active { 
+  background: var(--accent-light); 
+  color: var(--accent); 
+  border-color: rgba(91, 76, 245, 0.15); 
+}
+.nav-icon { font-size:15px; }
+
+.sidebar-footer { margin-top:auto; }
+
+.user-pill { 
+  display:flex; 
+  align-items:center; 
+  gap:10px; 
+  padding:12px; 
+  background: var(--bg); 
+  border-radius:var(--radius-sm); 
+  border: 1px solid var(--border);
+}
+.avatar { 
+  width:32px; height:32px; 
+  border-radius:50%; 
+  background: var(--accent); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: white; 
+  font-size:13px; 
+  font-weight:700; 
+  font-family: 'Outfit', sans-serif;
+}
+.user-name { font-size:12.5px; font-weight:600; }
+.user-role { font-size:11px; color:var(--muted); }
+
+/* Main */
+.main { padding:32px 40px; display:flex; flex-direction:column; gap:24px; }
+
+.topbar { 
+  display:flex; 
+  align-items:center; 
+  justify-content:space-between; 
+  padding-bottom:20px; 
+  border-bottom:1px solid var(--border); 
+}
+
+.page-title { 
+  font-family:'Outfit', sans-serif; 
+  font-weight: 800; 
+  font-size:22px; 
+  letter-spacing:-0.5px; 
+}
+.page-sub { font-size:13px; color:var(--muted); margin-top:4px; }
+
+.refresh-btn { 
+  display:flex; 
+  align-items:center; 
+  gap:6px; 
+  background:var(--surface); 
+  border:1px solid rgba(0,0,0,0.08); 
+  color:var(--text); 
+  padding:9px 16px; 
+  border-radius:var(--radius-sm); 
+  cursor:pointer; 
+  font-family: inherit; 
+  font-size:12px; 
+  font-weight: 600;
+  transition:all 0.2s; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.refresh-btn:hover { 
+  border-color:var(--accent); 
+  color:var(--accent); 
+  background:var(--accent-light); 
+}
+
+/* Sections */
+.section { display:none; flex-direction:column; gap:20px; }
+.section.active { display:flex; animation:up 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes up { from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
+
+/* Stat cards */
+.stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+
+.stat-card { 
+  background:var(--surface); 
+  border:1px solid var(--border); 
+  border-radius:var(--radius); 
+  padding:20px; 
+  position:relative; 
+  overflow:hidden; 
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.03);
+  transition: all 0.25s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px -10px rgba(0,0,0,0.05);
+}
+.stat-card::after { content:''; position:absolute; bottom:0; left:0; right:0; height:4px; }
+.stat-card.s-total::after { background:var(--accent); }
+.stat-card.s-high::after { background:var(--danger); }
+.stat-card.s-escalated::after { background:var(--warning); }
+.stat-card.s-latency::after { background:var(--success); }
+
+.stat-label { 
+  font-size:10.5px; 
+  color:var(--muted); 
+  font-weight: 700;
+  letter-spacing:1px; 
+  text-transform:uppercase; 
+  margin-bottom:8px; 
+}
+.stat-value { 
+  font-family:'Outfit',sans-serif; 
+  font-weight:800; 
+  font-size:32px; 
+  line-height:1; 
+}
+.stat-sub { font-size:11.5px; color:var(--muted); margin-top:6px; }
+
+/* Charts row */
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+.chart-card { 
+  background:var(--surface); 
+  border:1px solid var(--border); 
+  border-radius:var(--radius); 
+  padding:24px; 
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.03);
+}
+
+.chart-title { 
+  font-family:'Outfit',sans-serif; 
+  font-weight:700; 
+  font-size:13.5px; 
+  margin-bottom:16px; 
+  display:flex; 
+  align-items:center; 
+  gap:8px; 
+}
+.chart-wrap { position:relative; height:220px; }
+
+/* Table */
+.table-card { 
+  background:var(--surface); 
+  border:1px solid var(--border); 
+  border-radius:var(--radius); 
+  overflow:hidden; 
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.03);
+}
+.table-head { 
+  padding:16px 24px; 
+  border-bottom:1px solid var(--border); 
+  display:flex; 
+  align-items:center; 
+  justify-content:space-between; 
+  background: #fafbfc; 
+}
+.table-title { font-family:'Outfit',sans-serif; font-weight:700; font-size:14px; }
+
+.table-wrap { overflow-x:auto; }
+
+table { width:100%; border-collapse:collapse; }
+
+th { 
+  padding:12px 18px; 
+  text-align:left; 
+  font-size:10px; 
+  font-weight: 700; 
+  color:var(--muted); 
+  letter-spacing:1px; 
+  text-transform:uppercase; 
+  border-bottom:1px solid var(--border); 
+  background: #f8fafc; 
+  white-space:nowrap; 
+}
+
+td { 
+  padding:14px 18px; 
+  border-bottom:1px solid var(--border); 
+  font-size:13px; 
+  vertical-align:middle; 
+}
+tr:last-child td { border-bottom:none; }
+tr:hover td { background: #fafbfc; }
+
+.badge { 
+  display:inline-flex; 
+  align-items:center; 
+  padding:4px 10px; 
+  border-radius:30px; 
+  font-size:11px; 
+  font-weight:600; 
+  white-space:nowrap; 
+}
+
+.b-high { background:var(--danger-light); color:var(--danger); }
+.b-med { background:var(--warning-light); color:var(--warning); }
+.b-low { background:var(--success-light); color:var(--success); }
+.b-info { background:var(--info-light); color:var(--info); }
+.b-accent { background:var(--accent-light); color:var(--accent); }
+
+.complaint-cell { 
+  max-width:240px; 
+  white-space:nowrap; 
+  overflow:hidden; 
+  text-overflow:ellipsis; 
+  color: #4b5563; 
+}
+.escalate-yes { color:var(--danger); font-weight:600; }
+.escalate-no { color:var(--muted); }
+
+/* Empty state */
+.empty { text-align:center; padding:48px; color:var(--muted); font-size:13.5px; }
+
+/* Loading screen */
+.loading-overlay { display:flex; align-items:center; justify-content:center; padding:64px; width: 100%; }
+.spinner { 
+  width:32px; height:32px; 
+  border:3px solid var(--surface2); 
+  border-top-color:var(--accent); 
+  border-radius:50%; 
+  animation:spin 0.85s linear infinite; 
+}
+@keyframes spin { to{transform:rotate(360deg);} }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">⚡</div>
+      <div>
+        <div class="logo-name">Smart<span>Resolve</span></div>
+        <div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:1px;letter-spacing:1px;">ADMIN PANEL</div>
+      </div>
+    </div>
+    <div class="admin-badge">🔐 Admin Access</div>
+    
+    <nav class="nav">
+      <div class="nav-item active" onclick="showSection('dashboard',this)">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showSection('tickets',this)">
+        <span class="nav-icon">🎫</span> All Tickets
+      </div>
+      <div class="nav-item" onclick="showSection('escalated',this)">
+        <span class="nav-icon">🚨</span> Escalated
+      </div>
+      <div class="nav-item" onclick="showSection('analytics',this)">
+        <span class="nav-icon">📈</span> Analytics
+        </div>
+        <div class="nav-item" onclick="showSection('policy',this)">
+          <span class="nav-icon">📄</span> Policy Manager
+        </div>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="avatar">A</div>
+        <div>
+          <div class="user-name">Administrator</div>
+          <div class="user-role">Full Authority</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <a href="/" style="display:flex;align-items:center;gap:8px;padding:9px 12px;color:var(--muted);font-weight:600;text-decoration:none;font-size:12.5px;border-radius:var(--radius-sm);transition:all 0.2s;" onmouseover="this.style.background='var(--bg)';this.style.color='var(--text)'" onmouseout="this.style.background='transparent';this.style.color='var(--muted)'">
+          ← Back to App
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div class="page-sub" id="page-sub">Overview of all support activity</div>
+      </div>
+      <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div class="section active" id="sec-dashboard">
+      <div class="stat-row" id="stat-row">
+        <div class="loading-overlay"><div class="spinner"></div></div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title">📂 Complaints by Category</div>
+          <div class="chart-wrap"><canvas id="catChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">⚠️ Risk Distribution</div>
+          <div class="chart-wrap"><canvas id="riskChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Tickets Section -->
+    <div class="section" id="sec-tickets">
+      <div class="table-card">
+        <div class="table-head">
+          <div class="table-title">🎫 All Tickets</div>
+          <div style="font-size:12px;font-weight:600;color:var(--muted)" id="ticket-count"></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Complaint</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Risk</th>
+                <th>Score</th>
+                <th>Escalate</th>
+                <th>Latency</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="tickets-body">
+              <tr><td colspan="9" class="empty">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Escalated Section -->
+    <div class="section" id="sec-escalated">
+      <div class="table-card">
+        <div class="table-head">
+          <div class="table-title">🚨 Escalated Tickets</div>
+          <div style="font-size:12px;font-weight:600;color:var(--danger)" id="escalated-count"></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Complaint</th>
+                <th>Category</th>
+                <th>Risk Reason</th>
+                <th>Recommendation</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="escalated-body">
+              <tr><td colspan="6" class="empty">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Section -->
+    <div class="section" id="sec-analytics">
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title">⏱️ Avg Latency by Category</div>
+          <div class="chart-wrap"><canvas id="latencyChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">📊 Priority Breakdown</div>
+          <div class="chart-wrap"><canvas id="priorityChart"></canvas></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-head"><div class="table-title">📋 Raw Analytics Data</div></div>
+        <div style="padding:20px;">
+          <pre id="analytics-raw" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;line-height:1.75;color:var(--text);white-space:pre-wrap;background:#fafbfc;padding:16px;border-radius:10px;border:1px solid var(--border);"></pre>
+        </div>
+      </div>
+    </div>
+<!-- Policy Manager -->
+<div class="section" id="sec-policy">
+  <div class="table-card">
+    <div class="table-head">
+      <div class="table-title">📄 Upload Company Policy</div>
+    </div>
+    <div style="padding:24px;display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Upload box -->
+      <div id="drop-zone"
+        style="border:2px dashed var(--border2);border-radius:var(--radius);padding:40px;text-align:center;cursor:pointer;transition:all 0.2s;"
+        ondragover="event.preventDefault();this.style.borderColor='var(--accent)';this.style.background='var(--accent-light)'"
+        ondragleave="this.style.borderColor='var(--border2)';this.style.background='transparent'"
+        ondrop="handleDrop(event)" onclick="document.getElementById('policy-file').click()">
+        <div style="font-size:32px;margin-bottom:12px;">📁</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:6px;">
+          Drop your policy file here
+        </div>
+        <div style="font-size:12px;color:var(--muted);">
+          Supports .txt and .pdf files
+        </div>
+        <input type="file" id="policy-file" accept=".txt,.pdf" style="display:none" onchange="handleFileSelect(this)" />
+      </div>
+
+      <!-- Selected file preview -->
+      <div id="file-preview"
+        style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:none;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;" id="file-icon">📄</span>
+          <div>
+            <div style="font-weight:500;font-size:13px;" id="file-name">filename.txt</div>
+            <div style="font-size:11px;color:var(--muted);" id="file-size">0 KB</div>
+          </div>
+        </div>
+        <button onclick="clearFile()"
+          style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;">✕</button>
+      </div>
+
+      <!-- Upload button -->
+      <button id="upload-btn" onclick="uploadPolicy()"
+        style="background:var(--accent);color:white;border:none;padding:11px 24px;border-radius:var(--radius-sm);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;width:fit-content;transition:all 0.2s;"
+        onmouseover="this.style.background='var(--accent-dark)'" onmouseout="this.style.background='var(--accent)'">
+        ⚡ Upload & Rebuild Index
+      </button>
+
+      <!-- Status message -->
+      <div id="upload-status" style="display:none;padding:12px 16px;border-radius:var(--radius-sm);font-size:13px;">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Upload history -->
+  <div class="table-card">
+    <div class="table-head">
+      <div class="table-title">📋 Upload History</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Filename</th>
+            <th>Chunks Created</th>
+            <th>Uploaded At</th>
+          </tr>
+        </thead>
+        <tbody id="uploads-body">
+          <tr>
+            <td colspan="4" class="empty">No uploads yet</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+  </main>
+</div>
+
+<script>
+let allData = null;
+let catChart, riskChart, latencyChart, priorityChart;
+
+const sections = {
+  dashboard: { title:'Dashboard', sub:'Overview of all support activity' },
+  tickets: { title:'All Tickets', sub:'Complete ticket history' },
+  escalated: { title:'Escalated Tickets', sub:'Tickets flagged for senior review' },
+  analytics: { title:'Analytics', sub:'Performance metrics and trends' }
+};
+
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`sec-${name}`).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('page-title').textContent = sections[name].title;
+  document.getElementById('page-sub').textContent = sections[name].sub;
+  if(name === 'analytics' && allData) renderAnalytics(allData);
+}
+
+async function loadData() {
+  try {
+    const res = await fetch('/admin/data');
+    allData = await res.json();
+    renderDashboard(allData);
+    renderTickets(allData.tickets);
+    renderEscalated(allData.tickets);
+    renderUploads(allData.policy_uploads); 
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderDashboard(data) {
+  const a = data.analytics;
+  const highRisk = a.risk_distribution?.HIGH || 0;
+  document.getElementById('stat-row').innerHTML = `
+    <div class="stat-card s-total">
+      <div class="stat-label">Total Tickets</div>
+      <div class="stat-value">${a.total_tickets}</div>
+      <div class="stat-sub">All time</div>
+    </div>
+    <div class="stat-card s-high">
+      <div class="stat-label">High Risk</div>
+      <div class="stat-value">${highRisk}</div>
+      <div class="stat-sub">Needs attention</div>
+    </div>
+    <div class="stat-card s-escalated">
+      <div class="stat-label">Escalated</div>
+      <div class="stat-value">${a.total_escalations}</div>
+      <div class="stat-sub">Sent to senior team</div>
+    </div>
+    <div class="stat-card s-latency">
+      <div class="stat-label">Avg Latency</div>
+      <div class="stat-value">${(a.avg_latency_ms/1000).toFixed(1)}s</div>
+      <div class="stat-sub">Per ticket</div>
+    </div>
+  `;
+
+  // Category chart
+  const cats = a.categories || {};
+  if(catChart) catChart.destroy();
+  catChart = new Chart(document.getElementById('catChart'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(cats),
+      datasets: [{ data: Object.values(cats),
+        backgroundColor: ['#5b4cf5','#10b981','#f59e0b','#ef4444','#3b82f6','#8791a8'],
+        borderWidth: 0 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ font:{size:11, family:'Plus Jakarta Sans'}, padding:12 } } } }
+  });
+
+  // Risk chart
+  const risks = a.risk_distribution || {};
+  if(riskChart) riskChart.destroy();
+  riskChart = new Chart(document.getElementById('riskChart'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(risks),
+      datasets: [{ data: Object.values(risks),
+        backgroundColor: ['#fef2f2','#fffbeb','#ecfdf5'],
+        borderColor: ['#ef4444','#f59e0b','#10b981'],
+        borderWidth: 1.5, borderRadius: 6 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{ y:{ beginAtZero:true, ticks:{stepSize:1, font:{family:'Plus Jakarta Sans'}}, grid:{color:'#e2e8f0'} },
+               x:{ ticks:{font:{family:'Plus Jakarta Sans'}}, grid:{display:false} } } }
+  });
+}
+
+function renderUploads(uploads) {
+  if(!uploads || !uploads.length) {
+    document.getElementById('uploads-body').innerHTML =
+      '<tr><td colspan="4" class="empty">No uploads yet</td></tr>';
+    return;
+  }
+  document.getElementById('uploads-body').innerHTML = uploads.map(u => `
+    <tr>
+      <td style="color:var(--muted)">#${u.id}</td>
+      <td>${u.filename}</td>
+      <td><span class="badge b-accent">${u.chunks} chunks</span></td>
+      <td style="color:var(--muted)">${new Date(u.uploaded_at).toLocaleString()}</td>
+    </tr>`).join('');
+}
+
+function renderTickets(tickets) {
+  document.getElementById('ticket-count').textContent = `${tickets.length} total`;
+  if(!tickets.length) {
+    document.getElementById('tickets-body').innerHTML = '<tr><td colspan="9" class="empty">No tickets yet</td></tr>';
+    return;
+  }
+  document.getElementById('tickets-body').innerHTML = tickets.map(t => `
+    <tr>
+      <td style="color:var(--muted)">#${t.id}</td>
+      <td class="complaint-cell" title="${t.complaint}">${t.complaint}</td>
+      <td><span class="badge b-accent">${t.category}</span></td>
+      <td><span class="badge ${t.priority==='HIGH'?'b-high':t.priority==='MEDIUM'?'b-med':'b-low'}">${t.priority}</span></td>
+      <td><span class="badge ${t.risk_level==='HIGH'?'b-high':t.risk_level==='MEDIUM'?'b-med':'b-low'}">${t.risk_level}</span></td>
+      <td>${t.risk_score}/100</td>
+      <td class="${t.should_escalate?'escalate-yes':'escalate-no'}">${t.should_escalate?'🚨 Yes':'—'}</td>
+      <td>${t.latency_ms}ms</td>
+      <td style="color:var(--muted);white-space:nowrap">${new Date(t.created_at).toLocaleString()}</td>
+    </tr>`).join('');
+}
+
+function renderEscalated(tickets) {
+  const esc = tickets.filter(t => t.should_escalate);
+  document.getElementById('escalated-count').textContent = `${esc.length} tickets need attention`;
+  if(!esc.length) {
+    document.getElementById('escalated-body').innerHTML = '<tr><td colspan="6" class="empty">✅ No escalated tickets</td></tr>';
+    return;
+  }
+  document.getElementById('escalated-body').innerHTML = esc.map(t => `
+    <tr>
+      <td style="color:var(--muted)">#${t.id}</td>
+      <td class="complaint-cell" title="${t.complaint}">${t.complaint}</td>
+      <td><span class="badge b-accent">${t.category}</span></td>
+      <td style="font-size:12.5px;max-width:180px">${t.risk_reason||'—'}</td>
+      <td style="font-size:12.5px;max-width:180px">${t.recommendation||'—'}</td>
+      <td style="color:var(--muted);white-space:nowrap">${new Date(t.created_at).toLocaleString()}</td>
+    </tr>`).join('');
+}
+
+function renderAnalytics(data) {
+  const tickets = data.tickets;
+  const a = data.analytics;
+
+  // Latency by category
+  const latBycat = {};
+  tickets.forEach(t => {
+    if(!latBycat[t.category]) latBycat[t.category] = [];
+    latBycat[t.category].push(t.latency_ms);
+  });
+  const latLabels = Object.keys(latBycat);
+  const latVals = latLabels.map(k => Math.round(latBycat[k].reduce((a,b)=>a+b,0)/latBycat[k].length));
+
+  if(latencyChart) latencyChart.destroy();
+  latencyChart = new Chart(document.getElementById('latencyChart'), {
+    type: 'bar',
+    data: {
+      labels: latLabels,
+      datasets: [{ label:'Avg ms', data: latVals,
+        backgroundColor: '#eeecfe', borderColor:'#5b4cf5', borderWidth:1.5, borderRadius:6 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{beginAtZero:true, ticks:{font:{family:'Plus Jakarta Sans'}}, grid:{color:'#e2e8f0'}}, x:{ticks:{font:{family:'Plus Jakarta Sans'}}, grid:{display:false}} } }
+  });
+
+  // Priority breakdown
+  const pri = {};
+  tickets.forEach(t => { pri[t.priority] = (pri[t.priority]||0)+1; });
+  if(priorityChart) priorityChart.destroy();
+  priorityChart = new Chart(document.getElementById('priorityChart'), {
+    type: 'pie',
+    data: {
+      labels: Object.keys(pri),
+      datasets: [{ data: Object.values(pri),
+        backgroundColor: ['#fcebeb','#faeeda','#e1f5ee'],
+        borderColor: ['#ef4444','#f59e0b','#10b981'],
+        borderWidth: 1.5 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'right', labels:{font:{size:11, family:'Plus Jakarta Sans'}, padding:12 } } } }
+  });
+
+  document.getElementById('analytics-raw').textContent = JSON.stringify(a, null, 2);
+}
+
+let selectedFile = null;
+
+function handleFileSelect(input) {
+  if(input.files[0]) showFile(input.files[0]);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').style.borderColor = 'var(--border2)';
+  document.getElementById('drop-zone').style.background = 'transparent';
+  const file = e.dataTransfer.files[0];
+  if(file) showFile(file);
+}
+
+function showFile(file) {
+  selectedFile = file;
+  const ext = file.name.split('.').pop().toLowerCase();
+  document.getElementById('file-icon').textContent = ext === 'pdf' ? '📕' : '📄';
+  document.getElementById('file-name').textContent = file.name;
+  document.getElementById('file-size').textContent = `${(file.size/1024).toFixed(1)} KB`;
+  const preview = document.getElementById('file-preview');
+  preview.style.display = 'flex';
+}
+
+function clearFile() {
+  selectedFile = null;
+  document.getElementById('file-preview').style.display = 'none';
+  document.getElementById('policy-file').value = '';
+  document.getElementById('upload-status').style.display = 'none';
+}
+
+async function uploadPolicy() {
+  if(!selectedFile) {
+    showUploadStatus('Please select a file first!', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('upload-btn');
+  btn.textContent = '⏳ Uploading...';
+  btn.disabled = true;
+
+  const formData = new FormData();
+  formData.append('file', selectedFile);
+
+  try {
+    // Get credentials from browser's basic auth session
+    const res = await fetch('/admin/upload-policy', {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'  // ✅ sends browser auth credentials
+    });
+
+    const data = await res.json();
+
+    if(res.ok) {
+      showUploadStatus(
+        `✅ ${data.message} — ${data.chunks} chunks created from "${data.filename}"`,
+        'success'
+      );
+      clearFile();
+      loadData();
+    } else {
+      showUploadStatus(`❌ Error: ${data.detail}`, 'error');
+    }
+  } catch(e) {
+    showUploadStatus('❌ Upload failed. Check server logs.', 'error');
+  }
+
+  btn.textContent = '⚡ Upload & Rebuild Index';
+  btn.disabled = false;
+}
+
+function showUploadStatus(msg, type) {
+  const el = document.getElementById('upload-status');
+  el.style.display = 'block';
+  el.textContent = msg;
+  el.style.background = type === 'success' ? 'var(--success-light)' : 'var(--danger-light)';
+  el.style.color = type === 'success' ? 'var(--success)' : 'var(--danger)';
+  el.style.border = `1px solid ${type === 'success' ? '#9fe1cb' : '#f7c1c1'}`;
+}
+
+loadData();
+setInterval(loadData, 30000);
+</script>
+</body>
+</html>
