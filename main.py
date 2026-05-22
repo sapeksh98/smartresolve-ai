@@ -3,7 +3,7 @@ os.makedirs("data", exist_ok=True)
 os.makedirs("static", exist_ok=True)
 os.makedirs("data/model_cache", exist_ok=True)
 
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Header
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -54,11 +54,6 @@ def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
         )
     return credentials.username
 
-def verify_upload_token(x_admin_token: str = Header(...)):
-    expected = os.getenv("ADMIN_PASSWORD", "admin123")
-    if x_admin_token != expected:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    return True
 
 @app.get("/")
 def serve_ui():
@@ -79,7 +74,7 @@ def admin_data(username: str = Depends(verify_admin)):
 @app.post("/admin/upload-policy")
 async def upload_policy(
     file: UploadFile = File(...),
-    authorized: bool = Depends(verify_upload_token)
+    username: str = Depends(verify_admin)
 ):
     allowed = [".txt", ".pdf"]
     ext = os.path.splitext(file.filename)[1].lower()
