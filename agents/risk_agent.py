@@ -46,6 +46,7 @@ Return exactly this JSON:
             if result and "risk_reason" in result:
                 return {
                     "risk_level": risk_data["risk_level"],
+                    "risk_score": risk_data["risk_score"],
                     "should_escalate": risk_data["should_escalate"],
                     "risk_reason": result.get("risk_reason", ""),
                     "recommendation": result.get("recommendation", "")
@@ -56,6 +57,7 @@ Return exactly this JSON:
     # Final fallback
     return {
         "risk_level": risk_data["risk_level"],
+        "risk_score": risk_data["risk_score"],
         "should_escalate": risk_data["should_escalate"],
         "risk_reason": "Risk assessed based on complaint analysis.",
         "recommendation": "Manual review recommended."

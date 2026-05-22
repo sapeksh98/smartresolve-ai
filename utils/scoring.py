@@ -32,6 +32,29 @@ NEGATIVE_WORDS = [
     "worst", "useless", "pathetic", "ridiculous", "absurd"
 ]
 
+def extract_delay_days(text: str) -> int:
+    # Find all occurrences of digits followed by day/week/month/year
+    matches = re.findall(r'(\d+)\s*(day|week|month|year)s?', text.lower())
+    max_days = 0
+    for val_str, unit in matches:
+        try:
+            val = int(val_str)
+            if unit == 'day':
+                days = val
+            elif unit == 'week':
+                days = val * 7
+            elif unit == 'month':
+                days = val * 30
+            elif unit == 'year':
+                days = val * 365
+            else:
+                days = 0
+            if days > max_days:
+                max_days = days
+        except ValueError:
+            pass
+    return max_days
+
 def calculate_priority(complaint: str) -> dict:
     text = complaint.lower()
     score = 0
@@ -46,7 +69,23 @@ def calculate_priority(complaint: str) -> dict:
         if kw in text:
             score += 1
 
-    if len(complaint.split()) < 8:
+    # Check for delays
+    delay_days = extract_delay_days(text)
+    if delay_days >= 30:
+        score += 6
+    elif delay_days >= 7:
+        score += 4
+    elif delay_days >= 3:
+        score += 2
+
+    # Check for all-caps shouting
+    words = complaint.split()
+    if len(words) >= 3:
+        caps_words = sum(1 for w in words if w.isupper() and len(w) > 1)
+        if caps_words >= 2 or (caps_words / len(words)) > 0.3:
+            score += 2
+
+    if len(words) < 8:
         score = max(0, score - 2)
 
     if score >= 5:
@@ -77,7 +116,15 @@ def calculate_risk(category: str, complaint: str, priority: str) -> dict:
     if any(w in text for w in ["lawsuit", "lawyer", "court", "legal", "police"]):
         score += 20
 
-    if re.search(r'\d+\s*(week|month|day)', text):
+    # Add score based on delay days
+    delay_days = extract_delay_days(text)
+    if delay_days >= 30:
+        score += 35
+    elif delay_days >= 7:
+        score += 20
+    elif delay_days >= 3:
+        score += 10
+    elif re.search(r'\d+\s*(week|month|day)', text):
         score += 5
 
     score = min(score, 100)
@@ -94,5 +141,6 @@ def calculate_risk(category: str, complaint: str, priority: str) -> dict:
 
     return {
         "risk_level": risk_level,
+        "risk_score": score,
         "should_escalate": should_escalate
     }

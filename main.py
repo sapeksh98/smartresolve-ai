@@ -132,7 +132,7 @@ def resolve_complaint(request: ComplaintRequest):
     classified = classify_ticket(complaint)
     policy = get_relevant_policy(classified["category"], complaint)
     resolution = generate_resolution(classified["category"], complaint, policy)
-    risk = check_risk(classified["category"], complaint, resolution)
+    risk = check_risk(classified["category"], complaint, classified["priority"])
     reply = write_customer_reply(complaint, resolution, risk)
     latency_ms = int((time.time() - start) * 1000)
     result = {
@@ -144,6 +144,7 @@ def resolve_complaint(request: ComplaintRequest):
         "relevant_policy": policy,
         "resolution": resolution,
         "risk_level": risk.get("risk_level", "MEDIUM"),
+        "risk_score": risk.get("risk_score", 0),
         "risk_reason": risk.get("risk_reason", ""),
         "recommendation": risk.get("recommendation", ""),
         "should_escalate": risk.get("should_escalate", False),
