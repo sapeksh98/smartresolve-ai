@@ -1,4 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+import os
+os.makedirs("data", exist_ok=True)
+os.makedirs("static", exist_ok=True)
+os.makedirs("data/model_cache", exist_ok=True)
+
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -11,7 +16,7 @@ from agents.risk_agent import check_risk
 from agents.response_writer_agent import write_customer_reply
 from utils.database import init_db, save_ticket, get_all_tickets, get_analytics, save_policy_upload, get_policy_uploads
 from utils.rag_engine import retriever
-import time, os, secrets, shutil
+import time, secrets, shutil
 
 init_db()
 
@@ -21,8 +26,16 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
+    allow_credentials=True
 )
+
+# ✅ Load model AFTER server starts
+@app.on_event("startup")
+async def startup_event():
+    print("[Startup] Initializing RAG engine...")
+    retriever.initialize()
+    print("[Startup] Ready!")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 security = HTTPBasic()
@@ -40,6 +53,12 @@ def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
             headers={"WWW-Authenticate": "Basic"}
         )
     return credentials.username
+
+def verify_upload_token(x_admin_token: str = Header(...)):
+    expected = os.getenv("ADMIN_PASSWORD", "admin123")
+    if x_admin_token != expected:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return True
 
 @app.get("/")
 def serve_ui():
@@ -59,22 +78,19 @@ def admin_data(username: str = Depends(verify_admin)):
 
 @app.post("/admin/upload-policy")
 async def upload_policy(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    authorized: bool = Depends(verify_upload_token)
 ):
-    # Validate file type
     allowed = [".txt", ".pdf"]
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in allowed:
         raise HTTPException(status_code=400, detail="Only .txt and .pdf files allowed")
 
     os.makedirs("data", exist_ok=True)
-
-    # Save uploaded file
     upload_path = f"data/uploaded_policy{ext}"
     with open(upload_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    # Extract text based on file type
     if ext == ".pdf":
         try:
             import pypdf
@@ -91,27 +107,23 @@ async def upload_policy(
             text = f.read()
 
     if not text.strip():
-        raise HTTPException(status_code=400, detail="File appears to be empty or unreadable")
+        raise HTTPException(status_code=400, detail="File appears to be empty")
 
-    # Save as main policy file
     with open("data/company_policies.txt", "w", encoding="utf-8") as f:
         f.write(text)
 
-    # Rebuild FAISS index with new policy
     retriever.rebuild()
     chunks = len(retriever.chunks)
-
-    # Save upload record
     save_policy_upload(file.filename, chunks)
 
     return {
-        "message": f"Policy uploaded and index rebuilt successfully!",
+        "message": "Policy uploaded and index rebuilt successfully!",
         "filename": file.filename,
         "chunks": chunks
     }
 
 @app.post("/rebuild-index")
-def rebuild_index():
+def rebuild_index(username: str = Depends(verify_admin)):
     retriever.rebuild()
     return {"message": "FAISS index rebuilt!", "chunks": len(retriever.chunks)}
 
@@ -125,7 +137,7 @@ def resolve_complaint(request: ComplaintRequest):
     classified = classify_ticket(complaint)
     policy = get_relevant_policy(classified["category"], complaint)
     resolution = generate_resolution(classified["category"], complaint, policy)
-    risk = check_risk(classified["category"], complaint, classified["priority"])
+    risk = check_risk(classified["category"], complaint, resolution)
     reply = write_customer_reply(complaint, resolution, risk)
     latency_ms = int((time.time() - start) * 1000)
     result = {
