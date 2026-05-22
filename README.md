@@ -1,152 +1,152 @@
-⚡ SmartResolve AI
-A multi-agent RAG system for automated customer support ticket resolution. Five specialized AI agents work in a pipeline to classify, retrieve policy, generate resolutions, assess risk, and draft customer replies — all grounded in company policy documents.
+# ⚡ SmartResolve AI
 
-🏗️ Architecture
-Customer Complaint
-       │
-       ▼
-┌─────────────────┐
-│  Agent 1        │  classify_ticket()       → category, priority, summary
-│  Classifier     │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Agent 2        │  get_relevant_policy()   → RAG retrieval from FAISS
-│  Policy RAG     │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Agent 3        │  generate_resolution()   → policy-grounded resolution
-│  Resolution     │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Agent 4        │  check_risk()            → risk level, score, escalation
-│  Risk Assessor  │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Agent 5        │  write_customer_reply()  → polished email draft
-│  Reply Writer   │
-└────────┬────────┘
-         │
-         ▼
-  Human Approval → Send / Edit / Escalate
-Tech Stack:
+A lightweight, multi-agent RAG (Retrieval-Augmented Generation) system for automated customer support ticket resolution. Five specialized AI agents work in a pipeline to classify complaints, retrieve relevant company policy rules, generate resolutions, assess risks, and draft customer replies—all fully grounded in company policy documents.
 
-Backend: FastAPI + Uvicorn
-LLM: Groq API (llama-3.1-8b-instant)
-RAG: FAISS + SentenceTransformers (all-MiniLM-L6-v2)
-Database: SQLite
-Frontend: Vanilla HTML/CSS/JS
+Optimized to run seamlessly on resource-constrained hosting (e.g., Render's free tier) by utilizing a lightweight TF-IDF retrieval system (under 50MB RAM).
 
+---
 
-🚀 Local Setup
-1. Clone the repo
-bashgit clone https://github.com/yourusername/smartresolve-ai.git
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    A[Customer Complaint] --> B[Agent 1: Classifier]
+    B -->|Category & Priority| C[Agent 2: Policy RAG]
+    C -->|Grounding Policies| D[Agent 3: Resolution Engine]
+    D -->|Draft Resolution| E[Agent 4: Risk Assessor]
+    E -->|Approved Resolution & Risk Details| F[Agent 5: Response Writer]
+    F -->|Polished Customer Reply| G[Human-in-the-Loop Approval]
+```
+
+### The 5-Agent Pipeline
+1. **Agent 1 \| Classifier (`classify_ticket`)**: Categorizes the ticket (e.g., Billing, Delivery, Technical), extracts a summary, and calculates priority.
+2. **Agent 2 \| Policy RAG (`get_relevant_policy`)**: Performs keyword-based TF-IDF search over company policies to find matching rules.
+3. **Agent 3 \| Resolution Engine (`generate_resolution`)**: Drafts a solution step-by-step, fully grounded in the retrieved policies.
+4. **Agent 4 \| Risk Assessor (`check_risk`)**: Audits the resolution for legal/financial liabilities, assigns a risk score (0-100), and flags for escalation if needed.
+5. **Agent 5 \| Response Writer (`write_customer_reply`)**: Drafts a polite, professional response to the customer incorporating the resolution.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Backend**: FastAPI, Uvicorn, Python 3.11+
+- **LLM Engine**: Groq API (`llama-3.1-8b-instant`)
+- **RAG Engine**: Lightweight, customized pure-Python TF-IDF vectorizer + Cosine Similarity (`numpy`)
+- **Database**: SQLite3
+- **Frontend**: Premium dashboard with Chart.js, HTML5, Vanilla CSS, and JS
+
+---
+
+## 🚀 Local Setup
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/sapeksh98/smartresolve-ai.git
 cd smartresolve-ai
-2. Create virtual environment
-bashpython -m venv venv
-source venv/bin/activate        # Linux/Mac
-venv\Scripts\activate           # Windows
-3. Install dependencies
-bashpip install -r requirements.txt
-4. Set up environment variables
-bashcp .env.example .env
-# Edit .env and add your GROQ_API_KEY and ADMIN_PASSWORD
-Get a free Groq API key at: https://console.groq.com
-5. Add your company policies
-Place your policy document at:
+```
+
+### 2. Set Up a Virtual Environment
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# Linux/macOS
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure Environment Variables
+Create a `.env` file in the root directory:
+```env
+GROQ_API_KEY=your_groq_api_key_here
+ADMIN_PASSWORD=admin123
+```
+> Get a free Groq API key at [console.groq.com](https://console.groq.com).
+
+### 5. Initialize Policy Knowledge Base
+Place your policy rules or text document at:
+```
 data/company_policies.txt
-The FAISS index will be built automatically on first run.
-6. Run the server
-bashuvicorn main:app --reload
-Open http://localhost:8000 in your browser.
+```
+The search engine index will automatically compile and save to `data/tfidf_index.pkl` on the first run or when updated.
 
-📁 Project Structure
-smartresolve-ai/
-├── main.py                      # FastAPI app, routes, pipeline orchestration
-├── requirements.txt
-├── render.yaml                  # Render deployment config
-├── .env.example
-│
-├── agents/
-│   ├── classifier_agent.py      # Agent 1 — ticket classification
-│   ├── rag_agent.py             # Agent 2 — policy retrieval
-│   ├── resolution_agent.py      # Agent 3 — resolution generation
-│   ├── risk_agent.py            # Agent 4 — risk assessment
-│   └── response_writer_agent.py # Agent 5 — customer reply
-│
-├── utils/
-│   ├── llm.py                   # Groq LLM wrapper
-│   ├── rag_engine.py            # FAISS retriever
-│   └── database.py              # SQLite operations
-│
-├── static/
-│   ├── index.html               # Customer-facing UI
-│   └── admin.html               # Admin dashboard
-│
-└── data/
-    └── company_policies.txt     # RAG knowledge base (add your own)
+### 6. Run the Application
+```bash
+uvicorn main:app --reload
+```
+Open **`http://localhost:8000`** in your browser to view the customer interface. Go to **`http://localhost:8000/admin`** to log in to the administrator dashboard.
 
-🔌 API Endpoints
-MethodEndpointAuthDescriptionGET/—Customer UIPOST/resolve—Run full agent pipelineGET/tickets—List all ticketsGET/analytics—Aggregated statsGET/admin✅ BasicAdmin dashboardGET/admin/data✅ BasicTickets + analytics JSONPOST/rebuild-index✅ BasicRebuild FAISS index
-POST /resolve — Example
-Request:
-json{
-  "complaint": "I was charged twice for my subscription this month."
+---
+
+## 🔌 API Endpoints
+
+| Method | Endpoint | Auth Required | Description |
+| :--- | :--- | :---: | :--- |
+| **GET** | `/` | — | Customer submission page |
+| **POST** | `/resolve` | — | Processes complaints through the 5-agent pipeline |
+| **GET** | `/tickets` | — | Lists all processed tickets |
+| **GET** | `/analytics` | — | Returns aggregate statistics |
+| **GET** | `/admin` | Basic Auth | Administrator dashboard panel |
+| **GET** | `/admin/data` | Basic Auth | Admin statistics and ticket listings |
+| **POST** | `/admin/upload-policy` | Basic Auth | Upload new policy file and rebuild search index |
+| **POST** | `/rebuild-index` | Basic Auth | Manually rebuild the TF-IDF search index |
+
+### `POST /resolve` Example
+
+#### Request:
+```json
+{
+  "complaint": "its already been 100 days since i ordered my laptop"
 }
-Response:
-json{
-  "category": "BILLING",
+```
+
+#### Response:
+```json
+{
+  "complaint": "its already been 100 days since i ordered my laptop",
+  "category": "DELIVERY",
   "priority": "HIGH",
-  "summary": "Customer reports duplicate charge on subscription.",
-  "relevant_policy": "• Duplicate charges are refunded within 3 business days...",
-  "resolution": "RESOLUTION: Issue a full refund for the duplicate charge...",
-  "risk_level": "MEDIUM",
-  "risk_score": 45,
-  "risk_reason": "Duplicate charge confirmed by policy.",
-  "recommendation": "Process refund and send confirmation.",
-  "should_escalate": false,
-  "customer_reply": "Dear Customer, we sincerely apologize...",
-  "latency_ms": 4200
+  "summary": "Delay in order receipt, exceeds expected delivery time",
+  "confidence": 0.85,
+  "relevant_policy": "• Standard delivery time is 1-2 business days (max 3 days)...",
+  "resolution": "RESOLUTION: Investigate order and expedite courier delivery...",
+  "risk_level": "HIGH",
+  "risk_score": 90,
+  "risk_reason": "Extreme delay violates standard delivery policy, risking legal threat or chargeback.",
+  "recommendation": "Escalate to logistics team for instant tracking and customer outreach.",
+  "should_escalate": true,
+  "customer_reply": "Dear Customer, we apologize for the unacceptable delay...",
+  "latency_ms": 2450
 }
+```
 
-🛡️ Admin Panel
-Navigate to /admin and enter your ADMIN_PASSWORD.
+---
+
+## 📊 Administrator Panel
+
+Access the dashboard at `/admin` (Default Credentials: User: `admin`, Password: your configured `ADMIN_PASSWORD`).
+
 Features:
+- **Live Metrics**: Real-time stats on total tickets, high-risk flags, manual escalations, and average latency.
+- **Ticket Audit Log**: Searchable logs showing priority levels, computed risk scores, and latency.
+- **Escalation Center**: Quick filter for tickets marked for immediate human intervention.
+- **Policy Manager**: Drop-zone interface to upload new policies (`.pdf` or `.txt`) which automatically parses documents and rebuilds the vector index.
 
-📊 Dashboard with live stats (total tickets, high risk, escalations, avg latency)
-🎫 All tickets table with category, priority, risk, escalation status
-🚨 Escalated tickets view with risk reasons and recommendations
-📈 Analytics charts (category distribution, risk distribution, latency by category, priority breakdown)
-Auto-refreshes every 30 seconds
+---
 
+## ☁️ Deploying to Render
 
-☁️ Deploying to Render
+This repository is pre-configured for one-click deployments to Render.
 
-Push your repo to GitHub
-Go to render.com → New Web Service
-Connect your GitHub repo
-Render auto-detects render.yaml — confirm the settings
-Add environment variables in the Render dashboard:
-
-GROQ_API_KEY
-ADMIN_PASSWORD
-
-
-Deploy — first build takes ~3-5 minutes due to faiss-cpu compilation
-
-
-Note: The persistent disk keeps your SQLite database and FAISS index alive across restarts. First request after a cold start may take 20-30 seconds while the embedding model loads.
-
-
-🔑 Environment Variables
-VariableRequiredDefaultDescriptionGROQ_API_KEY✅—Groq API keyADMIN_PASSWORD✅admin123Admin panel password
-
-📄 License
-MIT License — feel free to use and modify for your own projects.
+1. Connect your repository on Render as a **Web Service**.
+2. Render will automatically parse the `render.yaml` configuration.
+3. Configure the following **Environment Variables** in the Render settings:
+   - `GROQ_API_KEY`: Your Groq platform API key.
+   - `ADMIN_PASSWORD`: Custom basic auth password for `/admin`.
+4. Deploy the service. The service uses a persistent disk mount to persist the SQLite database and TF-IDF search index across service restarts.
